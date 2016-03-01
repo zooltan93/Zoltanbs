@@ -1,0 +1,18 @@
+
+------------------
+POST /api/partner/partners HTTP/1.1
+Host: nak-test.dbx.hu
+Connection: keep-alive
+Content-Length: 1272
+Origin: http://nak-test.dbx.hu
+Accept-Language: hu
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.82 Safari/537.36
+Content-Type: application/json; charset=UTF-8
+Accept: application/json, text/javascript, */*; q=0.01
+X-Auth-Token: qjpix47tozsmrqzd2vcabiqxwcef0iwfjmx6ouz4l1mkael6
+X-Requested-With: XMLHttpRequest
+Referer: http://nak-test.dbx.hu/app/adminisztracio/partnerek/letrehozas
+Accept-Encoding: gzip, deflate
+
+{"partner":{"partnerRef":null,"partnerType":"NATURAL","messageLanguage":null,"specialType":null,"workRelationshipType":"EGYENI_VALLALKOZO","isAgent":false,"isOrgUnit":false,"isUser":false,"alive":false,"citizenship":"HU","namePrefix":null,"title":null,"lastName":"1000","firstName1":"2000","firstName2":null,"nameOrder":false,"namePostfix":null,"birthNamePrefix":null,"birthLastName":null,"birthFirstName1":null,"birthFirstName2":null,"mothersBirthNamePrefix":null,"mothersBirthLastName":"3000","mothersBirthFirstName1":"4000","mothersBirthFirstName2":null,"placeOfBirth":"1111","dateOfBirth":"1980-01-01","dateOfDeath":null,"hasResidencePermission":false,"occupation":null,"gender":"MALE","country":null,"county":null,"fullName":null,"shortName":null,"establishedAt":null,"reorganizedAt":null,"terminatedAt":null,"managerName":null,"accountManagerBank":null,"companyForm":null,"contacts":[{"contactType":"EMAIL","emailAddress":"2000@alk.hu"}],"addresses":[],"externalIdentifiers":[{"externalIdentifierType":"TAX_NUMBER","externalIdentifierValue":"8412724437"}],"bankAccountNumbers":[{"bankAccountRef":null,"number":"117940082222111100000000","bankAccountType":"GIRO","bankFullName":"BANK","bankShortName":null,"bankAddress":null,"bankSwiftCode":null,"isDefault":false}]}}
+Name
