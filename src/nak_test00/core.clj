@@ -14,34 +14,46 @@
 (def cig-path "resources/csv/cig_partner.csv")
 (def ober-path "resources/csv/ober_partner.csv")
 
-(defn login []
+
+;;Login
+(defn login
+  [username password]
   (let [{:keys [body] :as resp}
       @(http/request
          (merge common
                 {:url "http://nak-test.dbx.hu/api/auth/v1/users/authenticate"
-                 :body (json/write-str {:userName "korteheni" :password "Krumpli10"})}))]
-  (:authToken (json/read-json body))))
+                 :body (json/write-str {:userName username :password password})}))]
+    (println resp)))
 
 
 ;;CSV parse
+;;Két vectort csinál a JSON-ből
 (defn csv-in
   [path]
   (csv/read-csv (io/reader path)))
 
-  ;;Ket vektor, ezekbol kell kiszedni 1-1 elemet, azokat osszmappelni, es belerakni egy nagy map-be
-(let [[tag val] (csv-in cig-path)]
-  (println tag)
-  (println val))
+;;Egy-egy map-et csinál minden kulcs-érték párhoz
+(defn csv-to-maps
+  [path]
+  (let [[tag val] (csv-in path)]
+  (map hash-map tag val)))
+
+;;Előállítja az egybefüggő JSON stringet
+(defn partner-csv
+  [path]
+  (json/write-str
+    (reduce (fn [ret element]
+          (merge ret element))
+        {} (csv-to-maps path))))
 
 
-;;Partner létrehozás TODO
+;;Partner létrehozás
 (defn create-partner
   [authToken partner-path]
-  (http/request
+  (let [{:keys [body] :as resp}
+  @(http/request
     (merge common
            {:url "http://nak-test.dbx.hu/api/partner/partners"
-            :body (csv-in partner-path)
-            :header {"X-Auth_Token" authToken}})))
-
-
-
+            :body (partner-csv cig-path)
+            :header {"X-Auth_Token" authToken}}))]
+    (println body)))
