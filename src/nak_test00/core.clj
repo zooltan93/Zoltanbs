@@ -23,7 +23,7 @@
          (merge common
                 {:url "http://nak-test.dbx.hu/api/auth/v1/users/authenticate"
                  :body (json/write-str {:userName username :password password})}))]
-    (println resp)))
+    (:authToken (json/read-str body :key-fn keyword))))
 
 
 ;;CSV parse
