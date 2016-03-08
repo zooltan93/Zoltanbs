@@ -13,8 +13,7 @@
 (def common {:method  :post
              :headers {"Content-Type" "application/json"}})
 
-(def cig-path "resources/csv/cig_partner.csv")
-(def ober-path "resources/csv/ober_partner.csv")
+(def partner-csv "resources/csv/partners.csv")
 
 
 
@@ -38,7 +37,20 @@
         keys (map keyword keys)]
     (map (partial zipmap keys) vals)))
 
+(defn create-agent-map
+  [map]
+  {:agent {
+           :partnerRef   ()
+           :ruleTableCode
+                         :supervisorAgentRef:
+           :certificates [
+                          {:certificateId ... :dateOfCertification ...}
+                          {:certificateId ... :dateOfCertification ...}]
+           }})
 
+
+
+;;Átírni úgy, hogy a küldés közvetlenül a map összeállítása után történjen, mert akkor a visszakapott válasz idején még rendelkezésünkre áll a flat map, amiből könnyebb kiszedni az adatokat, ha ezután az adott partnert ügynökké, user-ré kell tenni
 (defn create-partner-maps
   [path]
   (let [csv (csv-in path)
@@ -96,4 +108,6 @@
                     :method  :post
                     :body    (json/generate-string %)
                     :headers {"X-Auth-Token" authToken "Content-Type" "application/json"}})]
-           (get (json/parse-string (get resp :body)) "messages")) partners)))
+           (cond
+             (get (json/parse-string (get resp :body)) "messages" partners)
+             (true? (get-in resp [:body :isAgent])) (create-agent))))))
