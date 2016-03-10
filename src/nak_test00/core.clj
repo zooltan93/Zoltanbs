@@ -9,27 +9,38 @@
   (:gen-class))
 
 
-;;defs
-(def common {:method  :post
-             :headers {"Content-Type" "application/json"}})
 
 (def partner-csv "resources/csv/partners.csv")
 
+(defn list-error
+  [body]
+  (let [messages (get body "messages")]
+    (println messages)))
 
+(defn has-error?
+  [body]
+  (let [messages (get body "messages")]
+    (if messages
+      true
+      false)))
 
-;;Login
+;;;;;
 (defn login
   [username password]
-  (let [request (merge common
-                       {:url  "http://nak-test.dbx.hu/api/auth/v1/users/authenticate"
-                        :body (json/generate-string {:userName username :password password})})
-        respnse @(http/request request)]
-    (get-in respnse [:headers :x-auth-token])))
+  (let [{:keys [body] :as resp} @(http/request {
+                                                :url     "http://nak-test.dbx.hu/api/auth/v1/users/authenticate"
+                                                :method  :post
+                                                :headers {"Content-Type" "application/json"}
+                                                :body    (json/generate-string {:userName username :password password})})
+        auth-token (get-in resp [:headers :x-auth-token])]
+    (has-error? body)
+    auth-token))
 
-;;teszthez
+
+
 (def korteheni (login "korteheni" "Krumpli10"))
 
-
+;;;;;;
 (defn csv-in
   [path]
   ;;egyszintű map a csv-ből
@@ -37,77 +48,82 @@
         keys (map keyword keys)]
     (map (partial zipmap keys) vals)))
 
+
+(defn create-partner-map
+  [csv-element]
+  {:partner {
+             :partnerRef          (:partnerRef csv-element)
+             :partnerType         (:partnerType csv-element)
+             :specialType         (:specialType csv-element)
+             :messageLanguage     (:messageLanguage csv-element)
+             :isUser              (boolean (:isUser csv-element))
+             :isAgent             (boolean (:isAgent csv-element))
+             :isOrgUnit           (boolean (:isOrgUnit csv-element))
+             :country             (:country csv-element)
+             :county              (:county csv-element)
+             :fullName            (:fullName csv-element)
+             :shortName           (:shortName csv-element)
+             :companyForm         (:companyForm csv-element)
+             :externalIdentifiers [{:externalIdentifierType  "VAT_NUMBER"
+                                    :externalIdentifierValue (:vatNumber csv-element)}
+                                   {:externalIdentifierType  "REGISTER_NUMBER"
+                                    :externalIdentifierValue (:registerNumber csv-element)}]
+             :establishedAt       (:establishedAt csv-element)
+             :managerName         (:managerName csv-element)
+             :addresses           [
+                                   {:addressType   (:addressType csv-element)
+                                    :addressRef    (:addressRef csv-element)
+                                    :zip           (:zip csv-element)
+                                    :city          (:city csv-element)
+                                    :streetAddress (:streetAddress csv-element)
+                                    :country       (:country csv-element)}]
+             :contacts            [
+                                   {:contactType  (:contactType csv-element)
+                                    :phoneNumber  (:phoneNumber csv-element)
+                                    :fax          (boolean (:fax csv-element))
+                                    :emailAddress (:emailAddress csv-element)}]
+             :bankAccountNumbers  [
+                                   {:bankAccountRef  (:bankAccountRef csv-element)
+                                    :number          (str/replace (:bankAccountNumber csv-element) #"-" "")
+                                    :bankAccountType (:bankAccountType csv-element)
+                                    :bankFullName    (:bankFullName csv-element)
+                                    :bankShortName   (:bankShortName csv-element)
+                                    :bankAddress     (:bankAddress csv-element)
+                                    :bankSwiftCode   (:bankSwiftCode csv-element)}]
+             }})
+
+
 (defn create-agent-map
-  [map]
+  [csv-element partnerRef]
   {:agent {
-           :partnerRef   ()
-           :ruleTableCode
-                         :supervisorAgentRef:
-           :certificates [
-                          {:certificateId ... :dateOfCertification ...}
-                          {:certificateId ... :dateOfCertification ...}]
+           :partnerRef         partnerRef
+           :ruleTableCode      (:ruleTableCode csv-element)
+           :supervisorAgentRef (:supervisorAgentRef csv-element)
+           :certificates       []
            }})
 
+;;;;;;
+(defn send-json
+  [url auth-token map-to-send]
+  (let [{:keys [body] :as resp}
+        @(http/request
+           {:url     url
+            :method  :post
+            :body    (json/generate-string map-to-send)
+            :headers {"X-Auth-Token" korteheni "Content-Type" "application/json"}})]
 
+    (list-error (json/parse-string body))
+    body))
 
-;;Átírni úgy, hogy a küldés közvetlenül a map összeállítása után történjen, mert akkor a visszakapott válasz idején még rendelkezésünkre áll a flat map, amiből könnyebb kiszedni az adatokat, ha ezután az adott partnert ügynökké, user-ré kell tenni
-(defn create-partner-maps
-  [path]
-  (let [csv (csv-in path)
-        maps (reduce
-               (fn [ret csv-element]
-                 (cons {:partner {
-                                  :partnerRef          (:partnerRef csv-element)
-                                  :partnerType         (:partnerType csv-element)
-                                  :specialType         (:specialType csv-element)
-                                  :messageLanguage     (:messageLanguage csv-element)
-                                  :isUser              (boolean (:isUser csv-element))
-                                  :isAgent             (boolean (:isAgent csv-element))
-                                  :isOrgUnit           (boolean (:isOrgUnit csv-element))
-                                  :country             (:country csv-element)
-                                  :county              (:county csv-element)
-                                  :fullName            (:fullName csv-element)
-                                  :shortName           (:shortName csv-element)
-                                  :companyForm         (:companyForm csv-element)
-                                  :externalIdentifiers [{:externalIdentifierType  "VAT_NUMBER"
-                                                         :externalIdentifierValue (:vatNumber csv-element)}
-                                                        {:externalIdentifierType  "REGISTER_NUMBER"
-                                                         :externalIdentifierValue (:registerNumber csv-element)}]
-                                  :establishedAt       (:establishedAt csv-element)
-                                  :managerName         (:managerName csv-element)
-                                  :addresses           [
-                                                        {:addressType   (:addressType csv-element)
-                                                         :addressRef    (:addressRef csv-element)
-                                                         :zip           (:zip csv-element)
-                                                         :city          (:city csv-element)
-                                                         :streetAddress (:streetAddress csv-element)
-                                                         :country       (:country csv-element)}]
-                                  :contacts            [
-                                                        {:contactType  (:contactType csv-element)
-                                                         :phoneNumber  (:phoneNumber csv-element)
-                                                         :fax          (boolean (:fax csv-element))
-                                                         :emailAddress (:emailAddress csv-element)}]
-                                  :bankAccountNumbers  [
-                                                        {:bankAccountRef  (:bankAccountRef csv-element)
-                                                         :number          (str/replace (:bankAccountNumber csv-element) #"-" "")
-                                                         :bankAccountType (:bankAccountType csv-element)
-                                                         :bankFullName    (:bankFullName csv-element)
-                                                         :bankShortName   (:bankShortName csv-element)
-                                                         :bankAddress     (:bankAddress csv-element)
-                                                         :bankSwiftCode   (:bankSwiftCode csv-element)}]
-                                  }} ret)) [] csv)]
-    maps))
-
-
+;;;;; 1. create-partner meghívja az login-t, ha az valid választ ad, akkor beküldi a partner json-t 2. ha a create-partner valid választ ad, akkor az meghívja (jelen esetben még csak) a create-agent fv-t
 (defn create-partner
-  [authToken partner-path]
-  (let [partners (create-partner-maps partner-path)]
-    (map #(let [resp
-                @(http/request
-                   {:url     "http://nak-test.dbx.hu/api/partner/partners"
-                    :method  :post
-                    :body    (json/generate-string %)
-                    :headers {"X-Auth-Token" authToken "Content-Type" "application/json"}})]
-           (cond
-             (get (json/parse-string (get resp :body)) "messages" partners)
-             (true? (get-in resp [:body :isAgent])) (create-agent))))))
+  [path-to-csv]
+  (let [auth-token korteheni]
+    (if auth-token
+      (let [flat-csv (csv-in path-to-csv)]
+        (map #(let
+               [resp (json/parse-string (send-json "http://nak-test.dbx.hu/api/partner/partners" auth-token (create-partner-map %)))]
+               (if (true?
+                     (and (= "true" (:isAgent %)) (not (has-error? resp)) ))
+                 (send-json "http://nak-test.dbx.hu/api/agent/v1/agents" auth-token (create-agent-map % (get-in resp ["partner" "partnerRef"])))))
+             flat-csv)))))

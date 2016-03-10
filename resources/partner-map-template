@@ -1,0 +1,40 @@
+{:partner {
+                                  :partnerRef          (:partnerRef csv-element)
+                                  :partnerType         (:partnerType csv-element)
+                                  :specialType         (:specialType csv-element)
+                                  :messageLanguage     (:messageLanguage csv-element)
+                                  :isUser              (boolean (:isUser csv-element))
+                                  :isAgent             (boolean (:isAgent csv-element))
+                                  :isOrgUnit           (boolean (:isOrgUnit csv-element))
+                                  :country             (:country csv-element)
+                                  :county              (:county csv-element)
+                                  :fullName            (:fullName csv-element)
+                                  :shortName           (:shortName csv-element)
+                                  :companyForm         (:companyForm csv-element)
+                                  :externalIdentifiers [{:externalIdentifierType  "VAT_NUMBER"
+                                                         :externalIdentifierValue (:vatNumber csv-element)}
+                                                        {:externalIdentifierType  "REGISTER_NUMBER"
+                                                         :externalIdentifierValue (:registerNumber csv-element)}]
+                                  :establishedAt       (:establishedAt csv-element)
+                                  :managerName         (:managerName csv-element)
+                                  :addresses           [
+                                                        {:addressType   (:addressType csv-element)
+                                                         :addressRef    (:addressRef csv-element)
+                                                         :zip           (:zip csv-element)
+                                                         :city          (:city csv-element)
+                                                         :streetAddress (:streetAddress csv-element)
+                                                         :country       (:country csv-element)}]
+                                  :contacts            [
+                                                        {:contactType  (:contactType csv-element)
+                                                         :phoneNumber  (:phoneNumber csv-element)
+                                                         :fax          (boolean (:fax csv-element))
+                                                         :emailAddress (:emailAddress csv-element)}]
+                                  :bankAccountNumbers  [
+                                                        {:bankAccountRef  (:bankAccountRef csv-element)
+                                                         :number          (str/replace (:bankAccountNumber csv-element) #"-" "")
+                                                         :bankAccountType (:bankAccountType csv-element)
+                                                         :bankFullName    (:bankFullName csv-element)
+                                                         :bankShortName   (:bankShortName csv-element)
+                                                         :bankAddress     (:bankAddress csv-element)
+                                                         :bankSwiftCode   (:bankSwiftCode csv-element)}]
+                                  }}
